@@ -1,0 +1,52 @@
+// &newShiftingLetter ({&oSmashingLetter}, destination-x, destination-y, sprite);
+&newShiftingLetter (osm, x, y, spr) {
+	@with (create(osm.x, osm.y, &oShiftingLetter)) {
+		p = 0; // progress
+		
+		// store starting coordinates & displacement to target
+		sx = self.x;
+		sy = self.y;
+		dx = x-sx;
+		dy = y-sy;
+		
+		// destroy smashing letter
+		destroy( osm );
+		
+		// set sprite
+		sprite_index = spr; // check sprite
+		image_speed  = 0;
+		
+		flag = false; // end flag
+		
+		@ret id;
+		
+	}
+}
+
+&oShiftingLetter => object_add();
+@onmain {
+	event( &oShiftingLetter, 'step', @fn {
+		p = min( 1.0, p + p*ts*0.70 + ts*0.35 );
+		
+		// tween location
+		x = sx + p*dx;
+		y = sy + p*dy;
+		
+		@test ( p < 1.0 && rand()<ts*6 ) {
+			gmfx_small( 
+				bbox_left+(bbox_right-bbox_left)*rand(), 
+				bbox_top +(bbox_bottom-bbox_top)*rand(), 
+				choose( 'star', 'fireworks' ), c_black
+			);
+		}
+	});
+	
+	event( &oShiftingLetter, 'draw', @fn {
+		// draw base
+		draw_self();
+		// draw secondary
+		draw_sprite_ext( sprite_index, 1, round(x), round(y), image_xscale, image_yscale, image_angle, image_blend, p );
+		
+	});
+}
+

@@ -1,0 +1,64 @@
+// close request
+&close => false;
+// ESC timer
+$esc_tmr => 0;
+
+@onmain {
+	@with (oConsole) {
+		
+	}
+}
+
+@onmain -4000 {
+	room_goto_next();
+}
+
+&oMain => object_add();
+@onmain 4000 {
+	logclr();
+	
+	event( &oMain, 'room-start', @fn {
+		
+	});
+	
+	event( &oMain, 'step-begin', @fn {
+		$run();
+		$debugTools();
+		
+		@test ( keyboard_check_pressed( vk_space ) ) {
+			&SBP_Animation();
+		}
+		
+		// hold escape to exit
+		@test ( keyboard_check_direct( vk_escape ) && WindowActive ) {
+			$esc_tmr+=ts;
+			@test ( $esc_tmr >= 0.5 ) { game_end() }
+		} @else {
+			$esc_tmr = 0;
+		}
+		
+	});
+	
+	event( &oMain, 'step-end', @fn {
+		@test ( &close ) {
+			!&close;
+			game_end();
+		}
+	});
+	
+	event( &oMain, 'draw', @fn {
+		@test ( debug_mode ) {
+			csDraw();
+		}
+	});
+	
+	event( &oMain, 'close', @fn {
+		&close = true;
+	});
+	
+	@with (create( &oMain )) {
+		persistent = true;
+		depth = -5000;
+	}
+}
+

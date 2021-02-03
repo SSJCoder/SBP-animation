@@ -1,0 +1,54 @@
+// &newSmashingLetter (x, y, sprite);
+&newSmashingLetter (x, y, spr) {
+	@with (create(x, y, &oSmashingLetter)) {
+		p = 0; // progress
+		
+		// set sprite
+		sprite_index = spr; // check sprite
+		// scaling
+		image_xscale = 10;
+		image_yscale = 10;
+		// alpha
+		image_alpha = 0;
+		
+		flag = false; // end flag
+		
+		@ret id;
+		
+	}
+}
+
+&oSmashingLetter => object_add();
+@onmain {
+	event( &oSmashingLetter, 'step', @fn {
+		p = min( 1.0, p + p*ts*4.0 + ts*4.0 );
+		
+		image_xscale = 10-p*9;
+		image_yscale = 10-p*9;
+		
+		image_alpha = p;
+		
+		@test ( p == 1.0 ) {
+			@test ( !flag ) {
+				// vfx
+				i~=0; @loop (i<8) {
+					gmfx_small( 
+						bbox_left+(bbox_right-bbox_left)*rand(), 
+						bbox_top +(bbox_bottom-bbox_top)*rand(), 
+						'smoke', c_orange
+					);
+					
+					i++;
+				}
+				// sfx
+				sound_play( &sfxExpl1, 0.25 );
+				
+				// set flag
+				flag = true;
+			}
+		}
+	});
+	
+	event( &oSmashingLetter, 'draw', @fn { draw_self() } );
+}
+

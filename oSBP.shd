@@ -1,0 +1,134 @@
+&SBP_Animation {
+	// destroy
+	destroy( &oSmashingLetter );
+	destroy( &oShiftingLetter );
+	destroy( oTimer );
+	
+	// create animation
+	create( &oSBP );
+}
+
+&sfxSBP   => sound_load( 'data/sounds/SBP.ogg' );
+&sfxExpl1 => sound_load( 'data/sounds/expl1.ogg' );
+
+@onmain {
+	// determine 'S' 'B' 'P' coordinates
+	{
+		mar~= -10; // S = -3
+		
+		wd1~= sprite_get_width(sS);
+		wd2~= sprite_get_width(sB);
+		wd3~= sprite_get_width(sP);
+		
+		wd_total~= wd1+wd2+wd3+mar*2;
+		ht_total~= max( sprite_get_height(sS), sprite_get_height(sB), sprite_get_height(sP) );
+		
+		x~= round(room_width/2 -wd_total/2);
+		y~= round(room_height/2);
+		
+		&sx = x+sprite_get_xoffset(sS);
+		&sy = y-3;
+		x+=wd1+mar;
+		&bx = x+sprite_get_xoffset(sB);
+		&by = y;
+		x+=wd2+mar;
+		&px = x+sprite_get_xoffset(sP);
+		&py = y;
+		
+	}
+	
+	// determine 'struct' 'based' 'programmin' coordinates
+	{
+		mar~= 10;
+		
+		wd1~= sprite_get_width(sStruct);
+		wd2~= sprite_get_width(sBased);
+		wd3~= sprite_get_width(sProgrammin);
+		
+		wd_total~= wd1+wd2+wd3+mar*2;
+		ht_total~= max( sprite_get_height(sStruct), sprite_get_height(sBased), sprite_get_height(sProgrammin) );
+		
+		x~= round(room_width/2-wd_total/2);
+		y~= round(room_height/2);
+		
+		&struct_x, 
+		&struct_y = x+sprite_get_xoffset(sStruct), y-3;
+		
+		x+=wd1+mar;
+		
+		&based_x, 
+		&based_y = x+sprite_get_xoffset(sBased), y;
+		
+		x+=wd2+mar;
+		
+		&programmin_x, 
+		&programmin_y = x+sprite_get_xoffset(sProgrammin), y;
+	}
+}
+
+&oSBP => object_add();
+@onmain {
+	event( &oSBP, 'create', @fn {
+		depth = 100;
+		
+		sound_play( &sfxSBP );
+		
+		@with (&newSmashingLetter( &sx, &sy, sS )) {
+			depth = -50;
+			
+			// store id
+			&osm_s = id;
+		}
+		
+		Timer( 0.50, @fn {
+			@with (&newSmashingLetter( &bx, &by, sB )) {
+				depth = -25;
+				
+				// store id
+				&osm_b = id;
+			}
+		});
+		
+		Timer( 1.00, @fn {
+			@with (&newSmashingLetter( &px, &py, sP )) {
+				depth = -25;
+				
+				// store id
+				&osm_p = id;
+			}
+		});
+		
+		Timer( 1.50, @fn {
+			&newShiftingLetter( &osm_s, &struct_x, &struct_y, sStruct );
+			&newShiftingLetter( &osm_b, &based_x, &based_y, sBased );
+			&newShiftingLetter( &osm_p, &programmin_x, &programmin_y, sProgrammin );
+		});
+		
+	});
+	
+	event( &oSBP, 'draw', @fn {
+		
+		@test ( keyboard_check( vk_backspace ) || keyboard_check( vk_escape ) ) {
+			destroy( &oSmashingLetter );
+			destroy( &oShiftingLetter );
+			destroy( oTimer );
+		}
+		
+		light~= 1/15;
+		draw_clear( rgb( light, light, light ) );
+		
+		@ret;
+		
+		draw_sprite(sP,0,&px,&py);
+		draw_sprite(sB,0,&bx,&by);
+		draw_sprite(sS,0,&sx,&sy);
+		
+		@ret;
+		
+		draw_sprite(sStruct,2,&struct_x,&struct_y);
+		draw_sprite(sBased,2,&based_x,&based_y);
+		draw_sprite(sProgrammin,2,&programmin_x,&programmin_y);
+		
+	});
+}
+
